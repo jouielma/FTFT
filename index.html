@@ -3,53 +3,81 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
-<title>15×15 턴제 1vs1</title>
+<title>FTFT 15x15 턴제 1vs1</title>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{margin:0;background:#151515;color:#eee;font-family:-apple-system,BlinkMacSystemFont,sans-serif}#app{max-width:1100px;margin:auto;padding:12px}.layout{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}#board{display:grid;grid-template-columns:repeat(15,1fr);width:min(94vw,570px);aspect-ratio:1;background:#444;gap:1px}.cell{background:#292929;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}.move{background:#344d36}.attack{background:#5a3434}.unit{width:75%;height:75%;border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:clamp(9px,2.5vw,15px)}.warrior{background:#b64a35}.assassin{background:#3973b8}.mine{font-size:clamp(8px,2vw,13px);font-weight:bold;text-align:center;line-height:1}.panel{width:min(94vw,360px);background:#222;border:1px solid #444;border-radius:10px;padding:12px}.turn{display:inline-block;background:#3d3d3d;border-radius:6px;padding:5px 8px}.status{background:#2b2b2b;border-radius:8px;padding:9px;margin:7px 0}.row{display:flex;justify-content:space-between;font-size:13px;margin:3px 0}.bar{height:9px;background:#444;border-radius:8px;overflow:hidden}.hp{height:100%;background:#67b56a}.ult{height:100%;background:#c5a34a}button{width:100%;margin:3px 0;padding:9px;border-radius:7px;border:1px solid #666;background:#3a3a3a;color:white;font-size:14px}button:disabled{opacity:.3}button.sel{outline:2px solid white}.gold{font-size:18px;font-weight:bold;margin:6px 0}.state{background:#2b2b2b;padding:7px;border-radius:7px;margin:6px 0}.notice{display:none;background:#3a3024;border:1px solid #66523c;padding:8px;border-radius:7px;margin-top:7px;color:#f0d5a5}#log{height:180px;overflow:auto;background:#111;padding:7px;border-radius:7px;font-size:12px;margin-top:7px}.small{font-size:11px;color:#aaa}
-</style></head><body><div id="app"><h2>⚔️ 15×15 턴제 1vs1</h2><div class="layout"><div id="board"></div><div class="panel"><div id="phase"></div><div id="info"></div><div id="actions"></div><div id="notice" class="notice"></div><h3>전투 로그</h3><div id="log"></div><p class="small">아이패드 터치용 독립 HTML 프로토타입</p></div></div></div>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#151515;color:#eee;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+body{overflow-x:hidden}
+#app{width:100%;max-width:620px;margin:auto;padding:5px}
+h2{font-size:18px;text-align:center;margin:4px}
+#board{width:min(96vw,560px);height:min(96vw,560px);margin:auto;display:grid;grid-template-columns:repeat(15,minmax(0,1fr));grid-template-rows:repeat(15,minmax(0,1fr));gap:1px;background:#555;overflow:hidden}
+.cell{width:100%;height:100%;min-width:0;min-height:0;background:#292929;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.cell.move{background:#344d36}.cell.attack{background:#5a3434}.cell.skill{background:#45405d}
+.unit{width:72%;height:72%;aspect-ratio:1;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:clamp(8px,2.7vw,15px);flex:none}
+.warrior{background:#b64a35}.assassin{background:#3973b8}
+.mine{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:clamp(7px,2vw,12px);line-height:1;text-align:center}
+#panel{width:100%;margin-top:6px;background:#222;border:1px solid #444;border-radius:9px;padding:6px}
+.turn{display:block;background:#3d3d3d;border-radius:6px;padding:7px;text-align:center;font-size:14px;font-weight:700}
+.status-wrap{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px}
+.status{background:#2b2b2b;border-radius:6px;padding:5px}.status.current{outline:1px solid #aaa}
+.row{display:flex;justify-content:space-between;font-size:11px;margin:2px 0}
+.bar{height:6px;background:#444;border-radius:6px;overflow:hidden}.hp{height:100%;background:#67b56a}.ult{height:100%;background:#c5a34a}
+#actions{margin-top:5px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+button{width:100%;min-height:36px;padding:6px;border-radius:6px;border:1px solid #666;background:#3a3a3a;color:#fff;font-size:12px;font-weight:600}
+button:disabled{opacity:.3}.active{background:#536b4f!important}.full{grid-column:1/-1}
+.gold{font-size:15px;font-weight:800}.state{background:#2b2b2b;padding:6px;border-radius:6px;font-size:11px;text-align:center}
+#log-title{font-size:12px;font-weight:700;margin-top:6px}#log{height:70px;overflow:auto;background:#111;padding:5px;border-radius:6px;font-size:10px;margin-top:3px}.shop{grid-column:1/-1;font-size:11px;color:#aaa;padding-top:2px}
+@media(max-width:600px){#board{width:96vw;height:96vw}}
+</style>
+</head>
+<body>
+<div id="app"><h2>⚔️ FTFT · 15×15 턴제 1vs1</h2><div id="board"></div><div id="panel"><div id="phase"></div><div id="info"></div><div id="actions"></div><div id="log-title">전투 로그</div><div id="log"></div></div></div>
 <script>
-const N=15, C={warrior:{name:"전사",max:150,hp:150,move:2,atk:25,sp:10,maxsp:10,ult:0},assassin:{name:"암살자",max:100,hp:100,move:4,atk:10,sp:10,maxsp:10,ult:0,hits:0,bonus:0}};
-let P=[{p:1,t:"warrior",x:null,y:null,c:JSON.parse(JSON.stringify(C.warrior))},{p:2,t:"assassin",x:null,y:null,c:JSON.parse(JSON.stringify(C.assassin))}],mines=[],gold={1:100,2:100},wealth={1:0,2:0},setup=1,turn=1,used=false,shop=false,sel="move",skills=new Set(),prev=new Set(),cur=new Set(),logs=[];
+const N=15;
+const C={warrior:{name:"전사",max:150,hp:150,move:2,atk:25,sp:10,maxsp:10,ult:0},assassin:{name:"암살자",max:100,hp:100,move:4,atk:10,sp:10,maxsp:10,ult:0,hits:0,bonus:0}};
+let P=[{p:1,t:"warrior",x:null,y:null,c:JSON.parse(JSON.stringify(C.warrior))},{p:2,t:"assassin",x:null,y:null,c:JSON.parse(JSON.stringify(C.assassin))}],mines=[],gold={1:100,2:100},wealth={1:0,2:0},setup=1,turn=1,used=false,shop=false,sel="move",skills=new Set(),previousDamage=new Set(),currentDamage=new Set(),logs=[];
 const board=document.getElementById("board");
-for(let y=0;y<N;y++)for(let x=0;x<N;x++){let e=document.createElement("div");e.className="cell";e.onclick=()=>click(x,y);e.dataset.x=x;e.dataset.y=y;board.appendChild(e)}
-const U=p=>P.find(u=>u.p===p), E=p=>U(p===1?2:1), dist=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
-function occ(x,y){return P.some(u=>u.x===x&&u.y===y)||mines.some(m=>m.x===x&&m.y===y)}
-function log(s){logs.unshift(s);document.getElementById("log").innerHTML=logs.slice(0,60).map(x=>"<div>"+x+"</div>").join("")}
-function warn(s){let n=document.getElementById("notice");n.textContent="⚠️ "+s;n.style.display="block";log("⚠️ "+s)}
-function cells(u,type){let a=[];for(let y=0;y<N;y++)for(let x=0;x<N;x++){if(x===u.x&&y===u.y)continue;if(type==="move"&&dist(u,{x,y})<=u.c.move)a.push([x,y]);if(type==="attack"&&((u.t==="warrior"&&Math.abs(x-u.x)<=1&&Math.abs(y-u.y)<=1)||(u.t==="assassin"&&((x===u.x||y===u.y)&&dist(u,{x,y})<=4))))a.push([x,y])}return a}
-function click(x,y){
- if(setup){if(occ(x,y)){warn("이미 사용 중인 칸입니다.");return}U(setup).x=x;U(setup).y=y;if(setup===1){setup=2;log("1P 배치 완료. 2P가 위치를 선택하세요.")}else{setup=0;turn=1;log("배치 완료. 1P 전사의 턴.")}render();return}
- let u=U(turn),t=P.find(v=>v.x===x&&v.y===y&&v.p!==turn);
- if(sel==="mine"){if(shop){warn("이번 턴에는 이미 상점 행동을 사용했습니다.");return}if(!occ(x,y))placeMine(x,y);else warn("광산을 설치할 수 없는 칸입니다.");return}
- if(sel==="move"){if(used){warn("이동/공격은 이미 사용했습니다.");return}if(!t&&cells(u,"move").some(a=>a[0]===x&&a[1]===y)){u.x=x;u.y=y;used=true;log(u.c.name+" 이동");render()}else warn("이 칸은 이동할 수 없습니다.");return}
- if(sel==="attack"){if(used){warn("이동/공격은 이미 사용했습니다.");return}if(t&&cells(u,"attack").some(a=>a[0]===x&&a[1]===y)){hit(u,t,u.c.atk,"기본 공격");used=true;render()}else warn("이 적은 공격 사거리 밖입니다.");return}
- skill(sel==="s1"?1:2,x,y,t)
+for(let y=0;y<N;y++)for(let x=0;x<N;x++){let e=document.createElement("div");e.className="cell";e.dataset.x=x;e.dataset.y=y;e.onclick=()=>clickCell(x,y);board.appendChild(e)}
+const U=p=>P.find(u=>u.p===p),E=p=>U(p===1?2:1),dist=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y),at=(x,y)=>document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+function occupied(x,y){return P.some(u=>u.x===x&&u.y===y)||mines.some(m=>m.x===x&&m.y===y)}
+function log(t){logs.unshift(t);document.getElementById("log").innerHTML=logs.slice(0,50).map(x=>"<div>"+x+"</div>").join("")}
+function warn(t){log("⚠️ "+t);alert("⚠️ "+t)}
+function cells(u,type){let r=[];for(let y=0;y<N;y++)for(let x=0;x<N;x++){if(x===u.x&&y===u.y)continue;if(type==="move"&&dist(u,{x,y})<=u.c.move&&!occupied(x,y))r.push([x,y]);if(type==="attack"&&((u.t==="warrior"&&Math.abs(x-u.x)<=1&&Math.abs(y-u.y)<=1)||(u.t==="assassin"&&(x===u.x||y===u.y)&&dist(u,{x,y})<=4)))r.push([x,y])}return r}
+function clickCell(x,y){
+ if(setup){if(occupied(x,y))return warn("이미 사용 중인 칸입니다.");U(setup).x=x;U(setup).y=y;if(setup===1){setup=2;log("1P 배치 완료. 2P 위치를 선택하세요.")}else{setup=0;turn=1;sel="move";log("배치 완료. 1P 전사의 턴.")}return render()}
+ const u=U(turn),t=P.find(v=>v.x===x&&v.y===y&&v.p!==turn);
+ if(sel==="mine"){if(shop)return warn("상점 행동은 이미 사용했습니다.");if(!occupied(x,y))return placeMine(x,y);return warn("광산을 설치할 수 없습니다.")}
+ if(sel==="move"){if(used)return warn("이동/공격은 이미 사용했습니다.");if(!t&&cells(u,"move").some(a=>a[0]===x&&a[1]===y)){u.x=x;u.y=y;used=true;sel="none";log(u.c.name+" 이동");render()}else warn("이동할 수 없는 칸입니다.");return}
+ if(sel==="attack"){if(used)return warn("이동/공격은 이미 사용했습니다.");if(t&&cells(u,"attack").some(a=>a[0]===x&&a[1]===y)){let d=u.c.atk;if(u.c.next){d+=u.c.next;u.c.next=0}hit(u,t,d,"기본 공격");used=true;sel="none";render()}else warn("공격 사거리 밖입니다.");return}
+ if(sel==="s1"||sel==="s2")skill(sel==="s1"?1:2,x,y,t);
 }
-function hit(a,t,dmg,name){if(t.c.shout){let r=Math.min(20,dmg);dmg-=r;t.c.ult=Math.min(100,t.c.ult+r)}t.c.hp=Math.max(0,t.c.hp-dmg);if(dmg>0){a.c.ult=Math.min(100,a.c.ult+dmg);cur.add(t.p)}if(a.t==="warrior"&&dmg>0)a.c.hp=Math.min(a.c.max,dmg? a.c.hp+10:a.c.hp);if(a.t==="assassin"&&dmg>0){a.c.hits++;if(a.c.hits>=5){a.c.hits-=5;let z=E(a.p);z.c.hp=Math.max(0,z.c.hp-20);cur.add(z.p);log("집요한 암살 발동! 모든 적에게 20 피해.")}}log(name+" → "+t.c.name+" "+dmg+" 피해");if(t.c.hp<=0){alert(a.c.name+" 승리!");log(t.c.name+" 패배!")}}
-function skill(n,x,y,t){let u=U(turn),cost=u.t==="warrior"?(n===1?10:5):2;if(skills.has(n)){warn("이 스킬은 이번 턴에 이미 사용했습니다.");return}if(u.c.sp<cost){warn("SP가 부족합니다.");return}if(!t){warn("적을 선택하세요.");return}
- if(u.t==="assassin"&&n===2&&!prev.has(t.p)){warn("이 적은 이전 턴에 암살자에게 피해를 주지 않았습니다.");return}
- u.c.sp-=cost;skills.add(n);
- if(u.t==="warrior"&&n===1){u.c.shout=2;log("전투의 함성: 다음 2턴 피해 20 감소")}
- if(u.t==="warrior"&&n===2){hit(u,t,40,"대검 가르기");u.c.next=25}
- if(u.t==="assassin"&&n===1){if(Math.abs(x-u.x)>2||Math.abs(y-u.y)>2){skills.delete(n);u.c.sp+=2;warn("5×5 범위 밖입니다.");return}hit(u,t,10+u.c.bonus,"계산된 속사");u.c.bonus+=10}
- if(u.t==="assassin"&&n===2)hit(u,t,10+u.c.bonus,"잔혹한 추격");
- render()
-}
-function buyWealth(){if(shop){warn("상점 행동은 이미 사용했습니다.");return}if(gold[turn]<50){warn("골드 부족");return}gold[turn]-=50;wealth[turn]++;shop=true;log("부유의 포션 구매");render()}
-function buyMine(){if(shop){warn("상점 행동은 이미 사용했습니다.");return}if(gold[turn]<50){warn("골드 부족");return}sel="mine";log("광산을 설치할 칸을 터치하세요.");render()}
-function placeMine(x,y){mines.push({x,y,hp:25,owner:turn});gold[turn]-=50;shop=true;sel="move";log(turn+"P 광산 설치 · HP25");render()}
-function ult(){let u=U(turn);if(u.c.ult<100){warn("궁극기 게이지 부족");return}u.c.ult-=100;if(u.t==="warrior"){hit(u,E(turn),50,"궁극기");u.c.move+=2}else{let t=E(turn);hit(u,t,10+u.c.bonus,"궁극기-속사");u.c.bonus+=10;if(prev.has(t.p)&&u.c.sp>=2){u.c.sp-=2;hit(u,t,10+u.c.bonus,"궁극기-추격")}}render()}
-function end(){let u=U(turn);if(u.c.shout)u.c.shout--;prev=new Set(cur);cur=new Set();let inc=50+wealth[turn]*50+mines.filter(m=>m.owner===turn).length*50;gold[turn]+=inc;log(turn+"P 턴 종료 · +"+inc+"G");turn=turn===1?2:1;used=false;shop=false;skills.clear();sel="move";render()}
+function hit(a,t,d,name){if(t.c.shout){let r=Math.min(20,d);d-=r;t.c.ult=Math.min(100,t.c.ult+r)}t.c.hp=Math.max(0,t.c.hp-d);if(d>0){a.c.ult=Math.min(100,a.c.ult+d);currentDamage.add(t.p)}if(a.t==="warrior"&&d>0)a.c.hp=Math.min(a.c.max,a.c.hp+10);if(a.t==="assassin"&&d>0&&++a.c.hits>=5){a.c.hits=0;E(a.p).c.hp=Math.max(0,E(a.p).c.hp-20);log("집요한 암살 발동! 모든 적에게 20 피해.")}log(name+" → "+t.c.name+" "+d+" 피해");if(t.c.hp<=0){alert(a.c.name+" 승리!");log(t.c.name+" 패배!")}}
+function skill(n,x,y,t){let u=U(turn),cost=u.t==="warrior"?(n===1?10:5):2;if(skills.has(n))return warn("이 스킬은 이번 턴에 이미 사용했습니다.");if(u.c.sp<cost)return warn("SP가 부족합니다.");if(!t)return warn("적을 선택하세요.");if(u.t==="assassin"&&n===2&&!previousDamage.has(t.p))return warn("이 적은 이전 턴에 암살자에게 피해를 주지 않았습니다.");if(u.t==="warrior"&&n===2&&x!==u.x&&y!==u.y)return warn("대검 가르기는 일직선 대상만 가능합니다.");if(u.t==="assassin"&&n===1&&(Math.abs(x-u.x)>2||Math.abs(y-u.y)>2))return warn("5×5 범위 밖입니다.");u.c.sp-=cost;skills.add(n);if(u.t==="warrior"&&n===1){u.c.shout=2;log("전투의 함성 발동")}if(u.t==="warrior"&&n===2){hit(u,t,40,"대검 가르기");u.c.next=25}if(u.t==="assassin"&&n===1){hit(u,t,10+u.c.bonus,"계산된 속사");u.c.bonus+=10}if(u.t==="assassin"&&n===2)hit(u,t,10+u.c.bonus,"잔혹한 추격");sel="none";render()}
+function buyWealth(){if(shop)return warn("상점 행동은 이미 사용했습니다.");if(gold[turn]<50)return warn("골드 부족");gold[turn]-=50;wealth[turn]++;shop=true;sel="none";log("부유의 포션 구매");render()}
+function buyMine(){if(shop)return warn("상점 행동은 이미 사용했습니다.");if(gold[turn]<50)return warn("골드 부족");sel="mine";log("광산을 설치할 칸을 터치하세요.");render()}
+function placeMine(x,y){mines.push({x,y,hp:25,owner:turn});gold[turn]-=50;shop=true;sel="none";log(turn+"P 광산 설치 · HP25");render()}
+function ultimate(){let u=U(turn);if(u.c.ult<100)return warn("궁극기 게이지 부족");u.c.ult-=100;if(u.t==="warrior"){hit(u,E(turn),50,"궁극기");u.c.move+=2}else{let t=E(turn);hit(u,t,10+u.c.bonus,"궁극기-속사");u.c.bonus+=10;if(previousDamage.has(t.p)&&u.c.sp>=2){u.c.sp-=2;hit(u,t,10+u.c.bonus,"궁극기-추격")}}sel="none";render()}
+function endTurn(){let u=U(turn);if(u.c.shout)u.c.shout--;previousDamage=new Set(currentDamage);currentDamage=new Set();let income=50+wealth[turn]*50+mines.filter(m=>m.owner===turn).length*50;gold[turn]+=income;log(turn+"P 턴 종료 · +"+income+"G");turn=turn===1?2:1;used=false;shop=false;skills.clear();sel="move";render()}
+function btn(t,f,d,a){return `<button class="${a?'active':''}" ${d?'disabled':''} onclick="${f}">${t}</button>`}
 function render(){
-document.querySelectorAll(".cell").forEach(e=>{e.className="cell";e.innerHTML=""});
-mines.forEach(m=>{let e=document.querySelector(`.cell[data-x="${m.x}"][data-y="${m.y}"]`);if(e)e.innerHTML=`<div class="mine">⛏️<br>${m.owner}P<br>HP ${m.hp}</div>`});
-P.forEach(u=>{if(u.x===null)return;let e=document.querySelector(`.cell[data-x="${u.x}"][data-y="${u.y}"]`),q=document.createElement("div");q.className="unit "+u.t;q.textContent=u.t==="warrior"?"전":"암";e.appendChild(q)});
-let u=U(turn);if(!setup&&sel!=="s1"&&sel!=="s2"&&sel!=="mine")cells(u,sel).forEach(a=>document.querySelector(`.cell[data-x="${a[0]}"][data-y="${a[1]}"]`).classList.add(sel==="move"?"move":"attack"));
-document.getElementById("phase").innerHTML=setup?setup+"P 스폰 위치 선택":`<span class="turn">🎯 ${turn}P ${u.c.name} 턴</span>`;
-document.getElementById("info").innerHTML=P.map(z=>`<div class="status"><b>${z.p}P ${z.c.name}</b><div class="row"><span>HP</span><span>${z.c.hp}/${z.c.max}</span></div><div class="bar"><div class="hp" style="width:${z.c.hp/z.c.max*100}%"></div></div><div class="row"><span>이동력</span><span>${z.c.move}</span></div><div class="row"><span>공격력</span><span>${z.c.atk}</span></div><div class="row"><span>SP</span><span>${z.c.sp}/${z.c.maxsp}</span></div><div class="row"><span>궁극기</span><span>${z.c.ult}/100</span></div><div class="bar"><div class="ult" style="width:${z.c.ult}%"></div></div><div class="row"><span>골드</span><span>💰 ${gold[z.p]}</span></div></div>`).join("");
-if(setup){document.getElementById("actions").innerHTML="<b>빈 칸을 터치해 스폰하세요.</b>";return}
-let c1=u.t==="warrior"?10:2,c2=u.t==="warrior"?5:2;
-document.getElementById("actions").innerHTML=`<div class="gold">💰 ${gold[turn]}G</div><div class="state">⚔️ 이동/공격: <b>${used?"사용 완료 ✓":"사용 가능"}</b></div><button ${used?"disabled":""} onclick="sel='move';render()">이동 ${used?"✓":""}</button><button ${used?"disabled":""} onclick="sel='attack';render()">기본 공격 ${used?"✓":""}</button><button ${skills.has(1)||u.c.sp<c1?"disabled":""} onclick="sel='s1';render()">스킬 1 (${c1} SP) ${skills.has(1)?"✓ 사용 완료":""}</button><button ${skills.has(2)||u.c.sp<c2?"disabled":""} onclick="sel='s2';render()">스킬 2 (${c2} SP) ${skills.has(2)?"✓ 사용 완료":""}</button><button ${u.c.ult<100?"disabled":""} onclick="ult()">궁극기 (${u.c.ult}/100)</button><button onclick="end()">턴 종료</button><div class="small">🧪 상점 · 턴당 1회</div><button ${shop||gold[turn]<50?"disabled":""} onclick="buyMine()">⛏️ 광산 포션 · 50G · HP25 · 소유자 매턴 +50G</button><button ${shop||gold[turn]<50?"disabled":""} onclick="buyWealth()">💰 부유의 포션 · 50G · 영구 매턴 +50G</button><button disabled>⚔️ 공격력 증가 포션 · 미정</button><button disabled>❤️ 회복 포션 · 미정</button><button disabled>🔥 궁극기 포션 · 미정</button><button disabled>🔵 SP 포션 · 미정</button>`;
+ document.querySelectorAll(".cell").forEach(e=>{e.className="cell";e.innerHTML=""});
+ mines.forEach(m=>{let e=at(m.x,m.y);if(e)e.innerHTML=`<div class="mine">⛏️<br>${m.owner}P<br>HP ${m.hp}</div>`});
+ P.forEach(u=>{if(u.x===null)return;let e=at(u.x,u.y),q=document.createElement("div");q.className="unit "+u.t;q.textContent=u.t==="warrior"?"전":"암";e.appendChild(q)});
+ if(!setup){let u=U(turn);if(sel==="move")cells(u,"move").forEach(a=>at(a[0],a[1])?.classList.add("move"));if(sel==="attack")cells(u,"attack").forEach(a=>at(a[0],a[1])?.classList.add("attack"));if(sel==="s1"&&u.t==="assassin")for(let y=Math.max(0,u.y-2);y<=Math.min(14,u.y+2);y++)for(let x=Math.max(0,u.x-2);x<=Math.min(14,u.x+2);x++)at(x,y)?.classList.add("skill")}
+ const u=U(turn);document.getElementById("phase").innerHTML=setup?`<span class="turn">${setup}P 스폰 위치 선택</span>`:`<span class="turn">🎯 ${turn}P ${u.c.name} 턴</span>`;
+ document.getElementById("info").innerHTML=`<div class="status-wrap">${P.map(z=>`<div class="status ${z.p===turn&&!setup?'current':''}"><b>${z.p}P ${z.c.name}</b><div class="row"><span>HP</span><span>${z.c.hp}/${z.c.max}</span></div><div class="bar"><div class="hp" style="width:${z.c.hp/z.c.max*100}%"></div></div><div class="row"><span>이동 ${z.c.move}</span><span>공격 ${z.c.atk}</span></div><div class="row"><span>SP</span><span>${z.c.sp}/${z.c.maxsp}</span></div><div class="row"><span>궁극기</span><span>${z.c.ult}/100</span></div><div class="bar"><div class="ult" style="width:${z.c.ult}%"></div></div><div class="row"><span>💰</span><span>${gold[z.p]}G</span></div></div>`).join("")}</div>`;
+ const a=document.getElementById("actions");if(setup){a.innerHTML=`<div class="state full">빈 칸을 터치해서 ${setup}P의 스폰 위치를 선택하세요.</div>`;return}
+ let c1=u.t==="warrior"?10:2,c2=u.t==="warrior"?5:2;
+ a.innerHTML=`<div class="gold full">💰 ${gold[turn]}G</div><div class="state full">⚔️ 이동/공격: <b>${used?'사용 완료 ✓':'사용 가능'}</b></div>
+ ${btn("이동",`sel='move';render()`,used,sel==="move")}${btn("기본 공격",`sel='attack';render()`,used,sel==="attack")}
+ ${btn("스킬 1 · "+c1+" SP",`sel='s1';render()`,skills.has(1)||u.c.sp<c1,sel==="s1")}${btn("스킬 2 · "+c2+" SP",`sel='s2';render()`,skills.has(2)||u.c.sp<c2,sel==="s2")}
+ ${btn("궁극기 · "+u.c.ult+"/100","ultimate()",u.c.ult<100)}${btn("턴 종료","endTurn()")}
+ <div class="shop">🧪 상점 · 턴당 1회</div>
+ ${btn("⛏️ 광산 · 50G","buyMine()",shop||gold[turn]<50,sel==="mine")}${btn("💰 부유 · 50G","buyWealth()",shop||gold[turn]<50)}
+ ${btn("⚔️ 공격력 포션 · 미정","",true)}${btn("❤️ 회복 포션 · 미정","",true)}
+ ${btn("🔥 궁극기 포션 · 미정","",true)}${btn("🔵 SP 포션 · 미정","",true)}`;
 }
 render();log("게임 시작 · 1P 전사가 스폰 위치를 선택하세요.");
-</script></body></html>
+</script>
+</body>
+</html>
