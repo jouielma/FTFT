@@ -1,0 +1,574 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>FTFT 15x15 턴제 1vs1</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--board-size:min(94vw,calc(100dvh - 302px),560px)}
+html,body{width:100%;height:100%;margin:0;background:#111;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Pretendard",sans-serif;overflow:hidden}
+button{touch-action:manipulation}
+#app{height:100dvh;width:100%;max-width:620px;margin:auto;padding:max(4px,env(safe-area-inset-top)) 5px max(4px,env(safe-area-inset-bottom));display:grid;grid-template-rows:30px 82px var(--board-size) 1fr;gap:4px;position:relative;overflow:hidden}
+h2{font-size:16px;text-align:center;margin:0;line-height:30px;white-space:nowrap}
+#phase{position:absolute;z-index:25;left:50%;top:112px;transform:translate(-50%,-50%);pointer-events:none}
+.turn{display:block;background:#101010d9;border:1px solid #777;border-radius:999px;padding:5px 12px;text-align:center;font-size:12px;font-weight:800;box-shadow:0 2px 8px #000;white-space:nowrap}
+#opponent-hud,#player-hud{min-height:0}
+#board{
+  --cell-size:calc((var(--board-size) - 4px) / 15);
+  width:var(--board-size);height:var(--board-size);margin:auto;position:relative;display:block;flex:none;background:#555;overflow:hidden;border:2px solid #777;border-radius:4px;box-shadow:0 4px 18px #0008
+}
+.cell{
+  position:absolute;
+  width:var(--cell-size);
+  height:var(--cell-size);
+  left:calc(var(--x) * var(--cell-size));
+  top:calc(var(--y) * var(--cell-size));
+  margin:0;
+  padding:0;
+  background:#292929;
+  border:1px solid #555;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.cell.move{background:#344d36}.cell.attack{background:#5a3434}.cell.skill{background:#45405d}
+.unit{
+  width:72%;
+  height:72%;
+  min-width:72%;
+  min-height:72%;
+  max-width:72%;
+  max-height:72%;
+  aspect-ratio:1;
+  border-radius:50%;
+  border:2px solid #fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:clamp(8px,2.7vw,15px);
+  flex:none;
+}
+.warrior{background:#b64a35}.assassin{background:#3973b8}
+.mine{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;font-size:clamp(7px,2vw,12px);line-height:1;text-align:center}
+.hud{height:100%;background:linear-gradient(180deg,#292929,#202020);border:1px solid #494949;border-radius:9px;padding:6px 8px;display:grid;grid-template-columns:minmax(82px,.8fr) 1.8fr minmax(112px,1fr);gap:8px;align-items:center;box-shadow:0 2px 8px #0006}
+.hud.current{border-color:#e6c75d;box-shadow:0 0 8px #e6c75d55}
+.hud-title{font-size:15px;font-weight:900}.hud-sub{font-size:10px;color:#bbb;margin-top:3px}.hud-bars{display:grid;gap:5px}.meter-line{display:grid;grid-template-columns:31px 1fr 53px;gap:5px;align-items:center;font-size:12px;font-weight:800}.bar{height:13px;background:#494949;border-radius:10px;overflow:hidden;border:1px solid #666}.hp,.sp{height:100%;transition:width .2s}.hp{background:linear-gradient(90deg,#49a955,#78d77e)}.sp{background:linear-gradient(90deg,#347ac3,#66b7ff)}
+.ult{height:100%;background:linear-gradient(90deg,#bb7b16,#ffd759)}.hud-money{text-align:right;font-size:16px;font-weight:900;color:#ffd969;line-height:1.2}.income{display:block;font-size:10px;color:#8fe69b;margin-top:4px}.buff-line,.passive-line{font-size:9px;color:#ccc;line-height:1.2}
+#bottom-zone{min-height:0;display:grid;grid-template-rows:74px 1fr;gap:4px}
+#actions{min-height:0;display:grid;align-items:stretch}
+.control-ring{height:100%;display:grid;grid-template-columns:1fr 104px 1fr;gap:5px;align-items:center}
+.button-stack{display:grid;grid-template-columns:1fr 1fr;gap:5px;height:100%}
+button{width:100%;min-height:34px;padding:4px;border-radius:8px;border:1px solid #666;background:linear-gradient(#414141,#303030);color:#fff;font-size:11px;font-weight:800;line-height:1.15}
+button:disabled{opacity:.28}.active{background:linear-gradient(#65845e,#42583e)!important;border-color:#91ba86!important}.end-btn{background:linear-gradient(#84443e,#592d29);border-color:#a65e55}.full{grid-column:1/-1}
+.ult-orb{width:100px;height:100px;border-radius:50%;padding:7px;display:grid;place-items:center;background:conic-gradient(#ffcf4d calc(var(--ult)*1%),#3d3d3d 0);box-shadow:0 0 13px #ffcf4d33;position:relative}.ult-orb::before{content:"";position:absolute;inset:7px;background:#181818;border-radius:50%;border:1px solid #666}.ult-orb button{position:relative;z-index:1;width:82px;height:82px;border-radius:50%;font-size:10px;background:#272727}.ult-orb strong{display:block;font-size:17px;color:#ffd75f;margin:2px 0}.state{background:#242424;padding:7px;border-radius:7px;font-size:11px;text-align:center}.selection-panel{position:absolute;z-index:50;left:8px;right:8px;top:118px;background:#1d1d1df2;border:1px solid #666;border-radius:12px;padding:10px;box-shadow:0 8px 25px #000}.selection-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.choice{background:#2b2b2b;border-radius:8px;padding:8px;font-size:11px}.choice b{font-size:14px}.choice .row{display:flex;justify-content:space-between;margin:3px 0}
+.edge-handle{position:fixed;z-index:70;top:50%;width:34px;height:112px;transform:translateY(-50%);padding:4px 2px;writing-mode:vertical-rl;letter-spacing:1px;border-radius:0 9px 9px 0;background:#303030e8}.edge-handle.log-handle{left:0}.edge-handle.shop-handle{right:0;border-radius:9px 0 0 9px}.drawer{position:fixed;z-index:90;top:0;bottom:0;width:min(82vw,330px);background:#1b1b1bf7;border:1px solid #555;padding:calc(14px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));transition:transform .25s ease;box-shadow:0 0 25px #000;display:flex;flex-direction:column}.drawer.left{left:0;transform:translateX(-105%)}.drawer.right{right:0;transform:translateX(105%)}.drawer.open{transform:translateX(0)}.drawer-head{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:17px;margin-bottom:10px}.drawer-head button{width:38px;min-height:34px}.drawer-backdrop{position:fixed;z-index:80;inset:0;background:#0008;display:none}.drawer-backdrop.open{display:block}#log{flex:1;overflow:auto;background:#0f0f0f;padding:8px;border-radius:8px;font-size:12px;line-height:1.45}.shop-grid{display:grid;gap:8px}.shop-note{font-size:11px;color:#aaa;margin-bottom:8px}.ability-details{margin-top:auto;background:#252525;border-radius:8px;padding:8px;font-size:11px;line-height:1.45}.ability-details b{color:#ffd86b}
+@media(max-height:760px){:root{--board-size:min(90vw,calc(100dvh - 268px),500px)}#app{grid-template-rows:26px 66px var(--board-size) 1fr}h2{line-height:26px;font-size:14px}.hud{padding:4px 6px}.hud-title{font-size:13px}.bar{height:10px}#bottom-zone{grid-template-rows:62px 1fr}.control-ring{grid-template-columns:1fr 84px 1fr}.ult-orb{width:80px;height:80px}.ult-orb button{width:66px;height:66px;font-size:9px}.ult-orb strong{font-size:14px}.button-stack{gap:3px}button{min-height:28px;font-size:10px}.edge-handle{height:92px}}
+@media(orientation:landscape) and (max-height:600px){:root{--board-size:min(58vh,420px)}#app{max-width:100%;grid-template-columns:170px var(--board-size) 1fr;grid-template-rows:28px 70px var(--board-size);justify-content:center}h2{grid-column:1/-1}#opponent-hud{grid-column:2;grid-row:2}#board{grid-column:2;grid-row:3}#bottom-zone{grid-column:3;grid-row:2/4;grid-template-rows:90px 1fr;padding:0 6px}.hud{grid-template-columns:1fr}.hud-bars{gap:3px}.hud-money{text-align:left}#phase{top:92px}.control-ring{grid-template-columns:1fr 90px 1fr}}
+
+#board.shake{animation:shake .22s linear}
+@keyframes shake{0%,100%{transform:translate(0)}25%{transform:translate(-4px,2px)}50%{transform:translate(4px,-2px)}75%{transform:translate(-3px,1px)}}
+.unit{position:relative;isolation:isolate}.unit.bleeding::before{content:"🩸";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(1.18);font-size:1.15em;z-index:-1;opacity:.9;pointer-events:none}
+.unit.shielded::after{content:"";position:absolute;inset:-5px;border:2px solid #7bdcff;border-radius:50%;box-shadow:0 0 8px #7bdcff,inset 0 0 7px #7bdcff;animation:shield 1s ease-in-out infinite alternate}
+@keyframes shield{from{opacity:.5;transform:scale(.96)}to{opacity:1;transform:scale(1.08)}}
+.damage-pop{position:absolute;z-index:40;pointer-events:none;font-size:18px;font-weight:900;color:white;text-shadow:0 2px 3px #000,0 0 5px #e44;transform:translate(-50%,-50%);animation:pop .9s ease-out forwards}.damage-pop.heal{color:#66ee7a;text-shadow:0 2px 3px #000,0 0 7px #3c5}.damage-pop.reduced{color:#86dcff;font-size:12px;text-shadow:0 1px 2px #000,0 0 5px #4cf}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-20%) scale(.7)}20%{opacity:1;transform:translate(-50%,-55%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-140%) scale(.9)}}
+.projectile{position:absolute;z-index:35;width:10px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 8px #fff;transform:translate(-50%,-50%);transition:left .22s ease-out,top .22s ease-out;pointer-events:none}
+.move-ghost{position:absolute;z-index:34;border-radius:50%;border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-weight:800;transition:left .3s ease,top .3s ease;pointer-events:none}
+.buff-line{font-size:10px;font-weight:700;margin-top:3px}
+.passive-line{font-size:10px;font-weight:800;margin-top:4px;padding:3px 4px;border-radius:5px;background:#202020}
+.mark-stack{position:absolute;z-index:18;left:50%;top:-7px;transform:translateX(-50%);display:flex;gap:1px;pointer-events:none}
+.mark-dot{width:6px;height:6px;border-radius:50%;border:1px solid #fff;background:#b93131;box-shadow:0 0 4px #b93131}
+</style>
+</head>
+<body>
+<div id="app">
+ <h2>⚔️ FTFT · 15×15 턴제 1vs1</h2>
+ <div id="phase"></div><div id="opponent-hud"></div><div id="board"></div>
+ <div id="bottom-zone"><div id="player-hud"></div><div id="actions"></div></div>
+</div>
+<button class="edge-handle log-handle">전투 로그</button>
+<button class="edge-handle shop-handle">포션 상점</button>
+<div id="drawer-backdrop" class="drawer-backdrop" onclick="closeDrawers()"></div>
+<aside id="log-drawer" class="drawer left"><div class="drawer-head"><span>📜 전투 로그</span><button onclick="closeDrawers()">×</button></div><div id="log"></div></aside>
+<aside id="shop-drawer" class="drawer right"><div class="drawer-head"><span>🧪 포션 상점</span><button onclick="closeDrawers()">×</button></div><div class="shop-note">한 턴에 여러 번 구매할 수 있습니다.</div><div id="shop-actions" class="shop-grid"></div><div id="ability-details" class="ability-details"></div></aside>
+<script>
+const N=15;
+const C={warrior:{name:"전사",max:150,hp:150,move:2,atk:25,sp:0,maxsp:10,ult:0},assassin:{name:"암살자",max:100,hp:100,move:4,atk:10,sp:0,maxsp:10,ult:0,hits:0,bonus:0,doubleSkills:false}};
+let P=[{p:1,t:null,x:null,y:null,c:null},{p:2,t:null,x:null,y:null,c:null}],mines=[],gold={1:100,2:100},wealth={1:0,2:0},gameMode=null,choose=0,setup=0,turn=1,used=false,sel="move",skills=new Set(),pursuitPrev={1:new Set(),2:new Set()},pursuitThis={1:new Set(),2:new Set()},logs=[];
+const board=document.getElementById("board");
+for(let y=0;y<N;y++)for(let x=0;x<N;x++){let e=document.createElement("div");e.className="cell";e.dataset.x=x;e.dataset.y=y;e.style.setProperty("--x",x);e.style.setProperty("--y",y);e.onclick=()=>clickCell(x,y);board.appendChild(e)}
+const U=p=>P.find(u=>u.p===p),E=p=>U(p===1?2:1),dist=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y),at=(x,y)=>document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+const incomeFor=p=>50+wealth[p]*50+mines.filter(m=>m.owner===p).length*50;
+function occupied(x,y){return P.some(u=>u.x===x&&u.y===y)||mines.some(m=>m.x===x&&m.y===y)}
+function log(t){logs.unshift(t);document.getElementById("log").innerHTML=logs.slice(0,50).map(x=>"<div>"+x+"</div>").join("")}
+function warn(t){log("⚠️ "+t);alert("⚠️ "+t)}
+function toggleDrawer(id){let d=document.getElementById(id),opening=!d.classList.contains("open");closeDrawers();if(opening){d.classList.add("open");document.getElementById("drawer-backdrop").classList.add("open")}}
+function closeDrawers(){document.querySelectorAll(".drawer").forEach(x=>x.classList.remove("open"));document.getElementById("drawer-backdrop").classList.remove("open")}
+function swipe(el,onSwipe){let sx=0,sy=0;el.addEventListener("pointerdown",e=>{sx=e.clientX;sy=e.clientY});el.addEventListener("pointerup",e=>{let dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy))onSwipe(dx)})}
+function drawerHandle(el,id,openDirection){let sx=0,sy=0;el.addEventListener("pointerdown",e=>{sx=e.clientX;sy=e.clientY;el.setPointerCapture?.(e.pointerId)});el.addEventListener("pointerup",e=>{let dx=e.clientX-sx,dy=e.clientY-sy;if(Math.abs(dx)<12&&Math.abs(dy)<12)toggleDrawer(id);else if(Math.abs(dx)>35&&Math.abs(dx)>Math.abs(dy)&&Math.sign(dx)===openDirection)toggleDrawer(id)})}
+drawerHandle(document.querySelector(".log-handle"),"log-drawer",1);
+drawerHandle(document.querySelector(".shop-handle"),"shop-drawer",-1);
+swipe(document.getElementById("log-drawer"),dx=>{if(dx<0)closeDrawers()});
+swipe(document.getElementById("shop-drawer"),dx=>{if(dx>0)closeDrawers()});
+function cells(u,type){let r=[];for(let y=0;y<N;y++)for(let x=0;x<N;x++){if(x===u.x&&y===u.y)continue;if(type==="move"&&dist(u,{x,y})<=u.c.move&&!occupied(x,y))r.push([x,y]);if(type==="attack"&&((u.t==="warrior"&&Math.abs(x-u.x)<=1&&Math.abs(y-u.y)<=1)||(u.t==="assassin"&&(x===u.x||y===u.y)&&dist(u,{x,y})<=4)))r.push([x,y])}return r}
+function selectMode(mode){
+ gameMode=mode;
+ choose=1;
+ log(mode==="ai"?"AI 대전 선택 · 1P 캐릭터를 고르세요.":"2인 대전 선택 · 1P 캐릭터를 고르세요.");
+ render()
+}
+function chooseCharacter(type){
+ if(!choose)return;
+ let u=U(choose);
+ u.t=type;
+ u.c=JSON.parse(JSON.stringify(C[type]));
+ log(choose+"P가 "+u.c.name+" 선택");
+
+ if(gameMode==="ai"){
+  let aiType=Math.random()<0.5?"warrior":"assassin";
+  let ai=U(2);
+  ai.t=aiType;
+  ai.c=JSON.parse(JSON.stringify(C[aiType]));
+  log("AI가 "+ai.c.name+" 선택");
+  choose=0;
+  setup=1;
+  turn=1;
+  log("1P 스폰 위치를 선택하세요.");
+ }else if(choose===1){
+  choose=2;
+ }else{
+  choose=0;
+  setup=1;
+  turn=1;
+  log("캐릭터 선택 완료. 1P 스폰 위치를 선택하세요.");
+ }
+ render()
+}
+function mineAt(x,y){return mines.find(m=>m.x===x&&m.y===y)}
+function validAttackCell(u,x,y){
+ return cells(u,"attack").some(a=>a[0]===x&&a[1]===y)
+}
+function clickCell(x,y){
+ if(choose||!gameMode)return;
+ if(gameMode==="ai"&&turn===2&&!setup)return;
+ if(setup){
+  if(occupied(x,y))return warn("이미 사용 중인 칸입니다.");
+  U(setup).x=x;U(setup).y=y;
+  if(setup===1&&gameMode==="ai"){
+   let ai=U(2),best=null,bestD=-1;
+   for(let yy=0;yy<N;yy++)for(let xx=0;xx<N;xx++){
+    if(occupied(xx,yy))continue;
+    let d=Math.abs(xx-x)+Math.abs(yy-y);
+    if(d>bestD){bestD=d;best={x:xx,y:yy}}
+   }
+   ai.x=best.x;ai.y=best.y;
+   setup=0;turn=1;sel="move";
+   log("AI 배치 완료. 1P의 턴.");
+  }else if(setup===1){
+   setup=2;log("1P 배치 완료. 2P 위치를 선택하세요.")
+  }else{
+   setup=0;turn=1;sel="move";log("배치 완료. 1P의 턴.")
+  }
+  return render()
+ }
+ const u=U(turn),t=P.find(v=>v.x===x&&v.y===y&&v.p!==turn),m=mineAt(x,y);
+ if(sel==="mine"){if(!occupied(x,y))return placeMine(x,y);return warn("광산을 설치할 수 없습니다.")}
+ if(sel==="move"){if(used)return warn("이동/공격은 이미 사용했습니다.");if(!t&&cells(u,"move").some(a=>a[0]===x&&a[1]===y)){let ox=u.x,oy=u.y;u.x=x;u.y=y;used=true;sel="none";log(u.c.name+" 이동");render();moveFx(u,ox,oy,x,y)}else warn("이동할 수 없는 칸입니다.");return}
+ if(sel==="attack"){
+  if(used)return warn("이동/공격은 이미 사용했습니다.");
+  if(t&&validAttackCell(u,x,y)){
+   let d=u.c.atk;if(u.c.next){d+=u.c.next;u.c.next=0}
+   hit(u,t,d,"기본 공격");used=true;sel="none";render()
+  }else if(m&&m.owner!==turn&&validAttackCell(u,x,y)){
+   let d=u.c.atk;if(u.c.next){d+=u.c.next;u.c.next=0}
+   damageMine(m,d,"기본 공격");used=true;sel="none";render()
+  }else warn("공격 사거리 밖이거나 자신의 광산입니다.");
+  return
+ }
+ if(sel==="s1"||sel==="s2")skill(sel==="s1"?1:2,x,y,t,m);
+}
+
+function center(u){let b=board.getBoundingClientRect(),c=at(u.x,u.y).getBoundingClientRect();return{x:c.left-b.left+c.width/2,y:c.top-b.top+c.height/2}}
+function shake(){board.classList.remove("shake");void board.offsetWidth;board.classList.add("shake");setTimeout(()=>board.classList.remove("shake"),240)}
+function popNumber(t,text,kind=""){if(!t||t.x===null)return;let q=center(t),e=document.createElement("div");e.className="damage-pop "+kind;e.textContent=text;e.style.left=q.x+"px";e.style.top=q.y+"px";board.appendChild(e);setTimeout(()=>e.remove(),920)}
+function popDamage(t,d){popNumber(t,"-"+d)}
+function healUnit(u,amount){let before=u.c.hp;u.c.hp=Math.min(u.c.max,u.c.hp+amount);let healed=u.c.hp-before;if(healed>0)setTimeout(()=>popNumber(u,"+"+healed,"heal"),220);return healed}
+function shot(a,t){let A=center(a),T=center(t),e=document.createElement("div");e.className="projectile";e.style.left=A.x+"px";e.style.top=A.y+"px";board.appendChild(e);requestAnimationFrame(()=>requestAnimationFrame(()=>{e.style.left=T.x+"px";e.style.top=T.y+"px"}));setTimeout(()=>e.remove(),260)}
+function moveFx(u,ox,oy,nx,ny){let A=at(ox,oy),B=at(nx,ny);if(!A||!B)return;let br=board.getBoundingClientRect(),a=A.getBoundingClientRect(),b=B.getBoundingClientRect(),e=document.createElement("div"),z=a.width*.72;e.className="move-ghost "+u.t;e.textContent=u.t==="warrior"?"전":"암";e.style.width=z+"px";e.style.height=z+"px";e.style.left=(a.left-br.left+(a.width-z)/2)+"px";e.style.top=(a.top-br.top+(a.height-z)/2)+"px";board.appendChild(e);requestAnimationFrame(()=>requestAnimationFrame(()=>{e.style.left=(b.left-br.left+(b.width-z)/2)+"px";e.style.top=(b.top-br.top+(b.height-z)/2)+"px"}));setTimeout(()=>e.remove(),330)}
+function hit(a,t,d,name,chargeUlt=true){shot(a,t);if(t.c.shout){let r=Math.min(20,d);d-=r;t.c.ult=Math.min(100,t.c.ult+r);if(r>0)setTimeout(()=>popNumber(t,"🛡 -"+r,"reduced"),80)}t.c.hp=Math.max(0,t.c.hp-d);if(d>0){shake();setTimeout(()=>popDamage(t,d),170)}if(d>0&&chargeUlt){a.c.ult=Math.min(100,a.c.ult+d);}if(a.t==="warrior"&&d>0)healUnit(a,10);if(a.t==="assassin"&&d>0){pursuitThis[a.p].add(t.p)}
+if(a.t==="assassin"&&d>0&&++a.c.hits>=5){a.c.hits=0;E(a.p).c.hp=Math.max(0,E(a.p).c.hp-20);log("집요한 암살 발동! 모든 적에게 20 피해.")}log(name+" → "+t.c.name+" "+d+" 피해");if(t.c.hp<=0){alert(a.c.name+" 승리!");log(t.c.name+" 패배!")}}
+function damageMine(m,d,name){
+ m.hp=Math.max(0,m.hp-d);
+ log(name+" → "+m.owner+"P 광산 "+d+" 피해");
+ if(m.hp<=0){log(m.owner+"P 광산 파괴!");mines=mines.filter(x=>x!==m)}
+}
+function skill(n,x,y,t,m=null){
+ let u=U(turn),cost=u.t==="warrior"?(n===1?10:5):2;
+ if(skills.has(n))return warn("이 스킬은 이번 턴에 이미 사용했습니다.");
+ if(u.c.sp<cost)return warn("SP가 부족합니다.");
+ if(u.t==="warrior"&&n===1){
+  u.c.sp-=cost;skills.add(n);u.c.shout=2;log("전투의 함성 발동");sel="none";render();return
+ }
+ let enemyMine=m&&m.owner!==turn;
+ if(!t&&!enemyMine)return warn("적 캐릭터 또는 적 광산을 선택하세요.");
+ if(u.t==="assassin"&&n===2&&t&&!pursuitPrev[u.p].has(t.p))return warn("암살자가 자신의 전 턴에 피해를 준 적 캐릭터에게만 사용할 수 있습니다.");
+ if(u.t==="assassin"&&n===2&&enemyMine)return warn("잔혹한 추격은 적 캐릭터에게만 사용할 수 있습니다.");
+ if(u.t==="warrior"&&n===2&&(x!==u.x&&y!==u.y))return warn("대검 가르기는 일직선 대상만 가능합니다.");
+ if(u.t==="assassin"&&n===1&&(Math.abs(x-u.x)>2||Math.abs(y-u.y)>2))return warn("5×5 범위 밖입니다.");
+
+ u.c.sp-=cost;skills.add(n);
+
+ if(u.t==="warrior"&&n===2){
+  if(t)hit(u,t,40,"대검 가르기");
+  else damageMine(m,40,"대검 가르기");
+  u.c.next=25
+ }
+ if(u.t==="assassin"&&n===1){
+  let d=10+u.c.bonus;
+  if(t){
+   hit(u,t,d,"계산된 속사");
+   if(u.c.doubleSkills)hit(u,t,d,"계산된 속사 2타")
+  }else{
+   damageMine(m,d,"계산된 속사");
+   if(u.c.doubleSkills&&mines.includes(m))damageMine(m,d,"계산된 속사 2타")
+  }
+  u.c.bonus+=5
+ }
+ if(u.t==="assassin"&&n===2&&t){
+  let d=10+u.c.bonus;
+  hit(u,t,d,"잔혹한 추격");
+  if(u.c.doubleSkills)hit(u,t,d,"잔혹한 추격 2타")
+ }
+ sel="none";render()
+}
+function buyWealth(){if(gold[turn]<150)return warn("골드 부족");gold[turn]-=150;wealth[turn]++;sel="none";log("부유의 포션 구매");render()}
+function buyHeal(){let u=U(turn);if(gold[turn]<100)return warn("골드 부족");if(u.c.hp>=u.c.max)return warn("체력이 이미 가득 찼습니다.");gold[turn]-=100;let healed=healUnit(u,50);log("회복 포션 · HP "+healed+" 회복");render()}
+function buySP(){let u=U(turn);if(gold[turn]<50)return warn("골드 부족");if(u.c.sp>=u.c.maxsp)return warn("SP가 이미 가득 찼습니다.");gold[turn]-=50;u.c.sp=Math.min(u.c.maxsp,u.c.sp+5);log("SP 포션 · SP 5 회복");render()}
+function buyMine(){if(mines.filter(m=>m.owner===turn).length>=4)return warn("광산은 최대 4개까지 소유할 수 있습니다.");if(gold[turn]<100)return warn("골드 부족");sel="mine";log("광산을 설치할 칸을 터치하세요.");render()}
+function placeMine(x,y){if(mines.filter(m=>m.owner===turn).length>=4)return warn("광산은 최대 4개까지 소유할 수 있습니다.");if(gold[turn]<100)return warn("골드 부족");mines.push({x,y,hp:25,owner:turn});gold[turn]-=100;sel="none";log(turn+"P 광산 설치 · HP25");render()}
+function ultimate(){
+ let u=U(turn);
+ if(u.c.ult<100)return warn("궁극기 게이지 부족");
+ u.c.ult-=100;
+ if(u.t==="warrior"){
+  hit(u,E(turn),50,"내게서 숨을 수 없다",false);
+  [...mines].filter(m=>m.owner!==turn).forEach(m=>damageMine(m,50,"내게서 숨을 수 없다"));
+  u.c.move+=2;
+  log("전사 궁극기 · 적 캐릭터와 적 광산 전체에 50 피해 / 이동력 영구 +2");
+ }else{
+  u.c.doubleSkills=true;
+  log("궁극의 계산 · 이후 모든 스킬 2회 발동")
+ }
+ sel="none";
+ render()
+}
+function finishTurn(){
+ let u=U(turn);
+ if(u.c.shout)u.c.shout--;
+ if(u.t==="assassin"){
+  pursuitPrev[u.p]=new Set(pursuitThis[u.p]);
+  pursuitThis[u.p]=new Set()
+ }
+ let income=incomeFor(turn);
+ gold[turn]+=income;
+ log(turn+"P 턴 종료 · +"+income+"G");
+ turn=turn===1?2:1;
+ used=false;
+ skills.clear();
+ sel="move";
+ render();
+}
+function endTurn(){
+ if(gameMode==="ai"&&turn===2)return;
+ finishTurn();
+ if(gameMode==="ai"&&turn===2)setTimeout(aiTurn,550)
+}
+function aiCanAttackFrom(u,x,y,e){
+ if(u.t==="warrior")return Math.abs(e.x-x)<=1&&Math.abs(e.y-y)<=1&&!(e.x===x&&e.y===y);
+ return (e.x===x||e.y===y)&&(Math.abs(e.x-x)+Math.abs(e.y-y)<=4);
+}
+function aiMoveOptions(u){
+ let r=[[u.x,u.y]];
+ for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+  if((x!==u.x||y!==u.y)&&dist(u,{x,y})<=u.c.move&&!occupied(x,y))r.push([x,y])
+ }
+ return r
+}
+function aiScorePos(u,x,y,e){
+ let d=Math.abs(x-e.x)+Math.abs(y-e.y),score=0;
+ let canAtk=aiCanAttackFrom(u,x,y,e);
+ if(u.t==="warrior"){
+  if(canAtk)score+=120;
+  score-=d*11;
+  if(Math.abs(x-e.x)<=1&&Math.abs(y-e.y)<=1)score+=30;
+ }else{
+  if(canAtk)score+=135;
+  let ideal=4;
+  score-=Math.abs(d-ideal)*16;
+  if(d<=1)score-=75;
+  if((x===e.x||y===e.y)&&d<=4)score+=45;
+  if(Math.abs(x-e.x)<=2&&Math.abs(y-e.y)<=2)score+=25;
+ }
+ // Avoid getting trapped by mines/edges a little.
+ let freedom=0;
+ [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy])=>{
+  let nx=x+dx,ny=y+dy;
+  if(nx>=0&&ny>=0&&nx<N&&ny<N&&!occupied(nx,ny))freedom++
+ });
+ score+=freedom*3;
+ return score
+}
+function aiBestMove(){
+ let u=U(2),e=U(1),opts=aiMoveOptions(u),best=opts[0],bestScore=-1e9;
+ for(let [x,y] of opts){
+  let sc=aiScorePos(u,x,y,e);
+  // Prefer a fresh square on ties.
+  if(sc>bestScore){bestScore=sc;best=[x,y]}
+ }
+ return best
+}
+function aiMoveTo(x,y){
+ let u=U(2);
+ if(x===u.x&&y===u.y)return false;
+ let ox=u.x,oy=u.y;
+ u.x=x;u.y=y;used=true;
+ log("AI · 전술 이동");
+ render();moveFx(u,ox,oy,x,y);
+ return true
+}
+function aiBasicAttack(){
+ let u=U(2),e=U(1);
+ if(used||!cells(u,"attack").some(a=>a[0]===e.x&&a[1]===e.y))return false;
+ let d=u.c.atk;
+ if(u.c.next){d+=u.c.next;u.c.next=0}
+ hit(u,e,d,"AI 기본 공격");
+ used=true;render();
+ return true
+}
+function aiUseS1(){
+ let u=U(2),e=U(1);
+ if(skills.has(1))return false;
+ if(u.t==="warrior"){
+  if(u.c.sp<10)return false;
+  // Use shield when injured, enemy can threaten us, or ult is close enough to profit from blocks.
+  let threat=dist(u,e)<=Math.max(4,e.c.move+2);
+  if(u.c.hp<=u.c.max*.72||threat||u.c.ult>=65){skill(1,u.x,u.y,null);return true}
+ }else{
+  if(u.c.sp<2||Math.abs(e.x-u.x)>2||Math.abs(e.y-u.y)>2)return false;
+  skill(1,e.x,e.y,e);return true
+ }
+ return false
+}
+function aiUseS2(){
+ let u=U(2),e=U(1);
+ if(skills.has(2))return false;
+ if(u.t==="warrior"){
+  if(u.c.sp>=5&&(u.x===e.x||u.y===e.y)){skill(2,e.x,e.y,e);return true}
+ }else{
+  if(u.c.sp>=2&&pursuitPrev[2].has(1)){skill(2,e.x,e.y,e);return true}
+ }
+ return false
+}
+function aiBuySmart(){
+ let u=U(2);
+ // FTFT economy is snowbally: buy permanent income first unless death is imminent.
+ let danger=u.c.hp<=Math.max(35,U(1).c.atk+25);
+ if(danger){
+  while(gold[2]>=100&&u.c.hp<=u.c.max-40){
+   gold[2]-=100;let healed=healUnit(u,50);log("AI · 긴급 회복 포션 · HP "+healed+" 회복")
+  }
+ }
+ // Wealth is extremely high priority. Buy repeatedly while we can still afford a mine afterward when possible.
+ while(gold[2]>=250&&wealth[2]<6){
+  gold[2]-=150;wealth[2]++;log("AI · 부유의 포션 최우선 투자")
+ }
+ // SP only after economy unless a cheap immediate skill is available.
+ let need=u.t==="warrior"?5:2;
+ if(gold[2]>=150&&u.c.sp<need){
+  gold[2]-=50;u.c.sp=Math.min(u.c.maxsp,u.c.sp+5);log("AI · SP 포션 사용")
+ }
+}
+function aiPlaceMineSmart(){
+ let u=U(2),e=U(1),placed=false;
+ while(gold[2]>=100&&mines.filter(m=>m.owner===2).length<4){
+  let cand=[];
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+   if(occupied(x,y))continue;
+   let du=Math.abs(x-u.x)+Math.abs(y-u.y);
+   let de=Math.abs(x-e.x)+Math.abs(y-e.y);
+   // Prefer safe, inconvenient-to-reach mine positions; no arbitrary 2-cell restriction.
+   let edge=Math.min(x,y,N-1-x,N-1-y);
+   let sc=de*8-du*1.5-edge*2;
+   if(x===e.x||y===e.y)sc-=15;
+   cand.push({x,y,sc})
+  }
+  if(!cand.length)break;
+  cand.sort((a,b)=>b.sc-a.sc);
+  let q=cand[0];
+  mines.push({x:q.x,y:q.y,hp:25,owner:2});gold[2]-=100;
+  log("AI · 광산 최우선 설치 ("+mines.filter(m=>m.owner===2).length+"/4)");
+  placed=true
+ }
+ return placed
+}
+function aiLethalPlan(){
+ let u=U(2),e=U(1),damage=0;
+ if(u.c.ult>=100){
+  if(u.t==="warrior")damage+=50;
+  // Assassin ult itself does no damage but doubles following skills.
+ }
+ let dbl=(u.t==="assassin"&&(u.c.doubleSkills||u.c.ult>=100))?2:1;
+ if(u.t==="assassin"){
+  if(!skills.has(2)&&u.c.sp>=2&&pursuitPrev[2].has(1))damage+=(10+u.c.bonus)*dbl;
+  if(!skills.has(1)&&u.c.sp>=2&&Math.abs(e.x-u.x)<=2&&Math.abs(e.y-u.y)<=2)damage+=(10+u.c.bonus)*dbl;
+ }else if(!skills.has(2)&&u.c.sp>=5&&(u.x===e.x||u.y===e.y))damage+=40;
+ if(!used&&cells(u,"attack").some(a=>a[0]===e.x&&a[1]===e.y))damage+=u.c.atk+(u.c.next||0);
+ return damage>=e.c.hp
+}
+function aiAttackBestMine(){
+ let u=U(2);
+ if(used)return false;
+ let targets=mines.filter(m=>m.owner===1&&validAttackCell(u,m.x,m.y));
+ if(!targets.length)return false;
+ targets.sort((a,b)=>a.hp-b.hp);
+ let m=targets[0],d=u.c.atk;
+ if(u.c.next){d+=u.c.next;u.c.next=0}
+ damageMine(m,d,"AI 기본 공격 · 광산 파괴");
+ used=true;render();return true
+}
+function aiSkillMine(){
+ let u=U(2);
+ let targets=mines.filter(m=>m.owner===1);
+ if(!targets.length)return false;
+ if(u.t==="warrior"&&!skills.has(2)&&u.c.sp>=5){
+  let m=targets.find(m=>m.x===u.x||m.y===u.y);
+  if(m){skill(2,m.x,m.y,null,m);return true}
+ }
+ if(u.t==="assassin"&&!skills.has(1)&&u.c.sp>=2){
+  let m=targets.find(m=>Math.abs(m.x-u.x)<=2&&Math.abs(m.y-u.y)<=2);
+  if(m){skill(1,m.x,m.y,null,m);return true}
+ }
+ return false
+}
+function aiTurn(){
+ if(gameMode!=="ai"||turn!==2||setup||choose)return;
+ let u=U(2),e=U(1);
+ log("🤖 AI 턴");
+ aiBuySmart();
+ // Income engine is the core strategy: fill mine slots immediately whenever affordable.
+ aiPlaceMineSmart();
+ render();
+
+ // Transform early if Assassin: permanent double skills is strategically stronger than hoarding.
+ if(u.t==="assassin"&&u.c.ult>=100&&!u.c.doubleSkills)ultimate();
+
+ u=U(2);e=U(1);
+
+ // Warrior ult: prioritize lethal; otherwise use at full gauge because it also destroys enemy mines and gives permanent move.
+ if(u.t==="warrior"&&u.c.ult>=100&&(e.c.hp<=50||mines.some(m=>m.owner===1)||u.c.move<6))ultimate();
+
+ // Destroy profitable enemy mines aggressively before spending attacks on the hero.
+ aiSkillMine();
+ aiAttackBestMine();
+
+ // Free skill actions before movement. Pursuit ignores distance, so cash it immediately.
+ aiUseS2();
+ u=U(2);e=U(1);
+ if(e.c.hp<=0)return;
+ aiUseS1();
+ u=U(2);e=U(1);
+ if(e.c.hp<=0)return;
+
+ // If already in attack range, attack before moving; otherwise choose the highest scoring reachable tile.
+ if(!aiBasicAttack()){
+  let [bx,by]=aiBestMove();
+  aiMoveTo(bx,by)
+ }
+
+ // Skills can still be used after moving. This is especially important for Assassin's 5x5 S1.
+ u=U(2);e=U(1);
+ if(e.c.hp>0){
+  aiUseS2();
+  aiUseS1();
+ }
+
+ // If movement was not consumed because best position was current square, use basic attack now.
+ u=U(2);e=U(1);
+ if(e.c.hp>0)aiBasicAttack();
+
+ // Spend spare economy after combat priorities are secured.
+ aiPlaceMineSmart();
+ render();
+ setTimeout(()=>finishTurn(),750)
+}
+function btn(t,f,d,a,extra=""){return `<button class="${a?'active ':''}${extra}" ${d?'disabled':''} onclick="${f}">${t}</button>`}
+function hud(z,isCurrent=false){
+ if(!z||!z.c)return `<div class="hud"><div class="hud-title">캐릭터 대기 중</div></div>`;
+ let passive=z.t==="warrior"?"피해 적중 시 HP +10":`타격 ${z.c.hits}/5 · 스킬 +${z.c.bonus}`;
+ return `<div class="hud ${isCurrent?'current':''}">
+  <div><div class="hud-title">${z.p}P · ${z.c.name}</div><div class="hud-sub">이동 ${z.c.move} · 공격 ${z.c.atk}</div><div class="passive-line">${passive}</div></div>
+  <div class="hud-bars">
+   <div class="meter-line"><span>HP</span><div class="bar"><div class="hp" style="width:${z.c.hp/z.c.max*100}%"></div></div><span>${z.c.hp}/${z.c.max}</span></div>
+   <div class="meter-line"><span>SP</span><div class="bar"><div class="sp" style="width:${z.c.sp/z.c.maxsp*100}%"></div></div><span>${z.c.sp}/${z.c.maxsp}</span></div>
+   <div class="meter-line"><span>ULT</span><div class="bar"><div class="ult" style="width:${z.c.ult}%"></div></div><span>${z.c.ult}%</span></div>
+  </div>
+  <div class="hud-money">💰 ${gold[z.p]}G<span class="income">(+${incomeFor(z.p)}G 수입 예정)</span>${z.c.shout?'<span class="income">🛡 피해 감소 활성</span>':''}</div>
+ </div>`
+}
+function abilityData(u){return u.t==="warrior"?{
+ s1:["전투의 함성","SP 10 · 다음 2턴 동안 받는 피해 20 감소, 감소량만큼 궁극기 충전"],
+ s2:["대검 가르기","SP 5 · 일직선 40 피해, 다음 기본 공격 피해 +25"],
+ ult:["내게서 숨을 수 없다","적 캐릭터와 광산 전체에 50 피해, 이동력 영구 +2"]
+}:{
+ s1:["계산된 속사",`SP 2 · 현재 ${10+u.c.bonus} 피해, 적중마다 스킬 피해 영구 +5`],
+ s2:["잔혹한 추격",`SP 2 · 현재 ${10+u.c.bonus} 피해, 자신의 전 턴에 피해를 준 적을 거리 무시 추격`],
+ ult:["궁극의 계산","이후 모든 스킬이 2번 연속 발동"]
+}}
+function render(){
+ document.querySelectorAll(".cell").forEach(e=>{e.className="cell";e.innerHTML=""});
+ const top=document.getElementById("opponent-hud"),bottom=document.getElementById("player-hud"),a=document.getElementById("actions"),shop=document.getElementById("shop-actions"),details=document.getElementById("ability-details");
+ if(!gameMode){
+  document.getElementById("phase").innerHTML=`<span class="turn">🎮 게임 모드 선택</span>`;top.innerHTML="";bottom.innerHTML="";shop.innerHTML="";details.innerHTML="스킬 설명과 포션 상점은 게임 시작 후 표시됩니다.";
+  a.innerHTML=`<div class="selection-panel"><div class="state">친구와 번갈아 플레이하거나 AI와 대전할 수 있습니다.</div><div class="selection-grid" style="margin-top:8px"><button onclick="selectMode('pvp')">👥 2인 대전</button><button onclick="selectMode('ai')">🤖 AI 대전</button></div><div class="state" style="margin-top:8px">AI는 사거리·생존·콤보·궁극기·경제를 계산해 행동합니다.</div></div>`;
+  return
+ }
+ if(choose){
+  document.getElementById("phase").innerHTML=`<span class="turn">🎭 ${choose}P 캐릭터 선택</span>`;top.innerHTML="";bottom.innerHTML="";shop.innerHTML="";details.innerHTML="캐릭터를 먼저 선택하세요.";
+  a.innerHTML=`<div class="selection-panel"><div class="selection-grid">
+   <div class="choice"><b>⚔️ 전사</b><div class="row"><span>HP / 이동 / 공격</span><span>150 / 2 / 25</span></div><div>피해를 줄 때 HP 10 회복</div><button style="margin-top:7px" onclick="chooseCharacter('warrior')">전사 선택</button></div>
+   <div class="choice"><b>🗡️ 암살자</b><div class="row"><span>HP / 이동 / 공격</span><span>100 / 4 / 10</span></div><div>5회 적중 시 적 전체 20 피해</div><button style="margin-top:7px" onclick="chooseCharacter('assassin')">암살자 선택</button></div>
+  </div><div class="state" style="margin-top:7px">같은 캐릭터끼리도 대전할 수 있습니다.</div></div>`;
+  return
+ }
+ mines.forEach(m=>{let e=at(m.x,m.y);if(e)e.innerHTML=`<div class="mine">⛏️<br>${m.owner}P<br>HP ${m.hp}</div>`});
+ P.forEach(u=>{if(u.x===null)return;let e=at(u.x,u.y),q=document.createElement("div"),bleeding=P.some(a=>a.t==="assassin"&&pursuitPrev[a.p].has(u.p));q.className="unit "+u.t+(u.t==="warrior"&&u.c.shout?" shielded":"")+(bleeding?" bleeding":"");q.textContent=u.t==="warrior"?"전":"암";
+ let enemyAssassin=P.find(a=>a.p!==u.p&&a.t==="assassin");
+ if(enemyAssassin&&enemyAssassin.c.hits>0){
+  let ms=document.createElement("div");ms.className="mark-stack";
+  for(let i=0;i<Math.min(4,enemyAssassin.c.hits);i++){let d=document.createElement("span");d.className="mark-dot";ms.appendChild(d)}
+  q.appendChild(ms)
+ }
+ e.appendChild(q)});
+ if(!setup){let u=U(turn);if(sel==="move")cells(u,"move").forEach(a=>at(a[0],a[1])?.classList.add("move"));if(sel==="attack")cells(u,"attack").forEach(a=>at(a[0],a[1])?.classList.add("attack"));if(sel==="s1"&&u.t==="assassin")for(let y=Math.max(0,u.y-2);y<=Math.min(14,u.y+2);y++)for(let x=Math.max(0,u.x-2);x<=Math.min(14,u.x+2);x++)at(x,y)?.classList.add("skill");
+ if(sel==="s2"&&u.t==="warrior"){for(let i=0;i<N;i++){if(i!==u.x)at(i,u.y)?.classList.add("skill");if(i!==u.y)at(u.x,i)?.classList.add("skill")}}
+ if(sel==="s2"&&u.t==="assassin"&&pursuitPrev[u.p].has(E(u.p).p))at(E(u.p).x,E(u.p).y)?.classList.add("skill")}
+ const u=U(turn),enemy=E(turn);document.getElementById("phase").innerHTML=setup?`<span class="turn">${setup}P 스폰 위치 선택</span>`:`<span class="turn">🎯 ${turn}P ${u.c.name} 턴</span>`;
+ top.innerHTML=hud(enemy,false);bottom.innerHTML=hud(u,!setup);
+ if(setup){a.innerHTML=`<div class="state full">빈 칸을 터치해서 ${setup}P의 스폰 위치를 선택하세요.</div>`;shop.innerHTML="";details.innerHTML="배치가 끝나면 스킬 정보가 표시됩니다.";return}
+ let ability=abilityData(u),c1=u.t==="warrior"?10:2,c2=u.t==="warrior"?5:2;
+ details.innerHTML=`<b>① ${ability.s1[0]}</b><br>${ability.s1[1]}<br><br><b>② ${ability.s2[0]}</b><br>${ability.s2[1]}<br><br><b>🔥 ${ability.ult[0]}</b><br>${ability.ult[1]}`;
+ shop.innerHTML=`${btn("⛏️ 광산 · 100G","buyMine();closeDrawers()",gold[turn]<100||mines.filter(m=>m.owner===turn).length>=4,sel==="mine")}${btn("💰 부유 · 150G","buyWealth()",gold[turn]<150)}${btn("❤️ 회복 · 100G","buyHeal()",gold[turn]<100||u.c.hp>=u.c.max)}${btn("🔵 SP +5 · 50G","buySP()",gold[turn]<50||u.c.sp>=u.c.maxsp)}${btn("🔥 궁극기 포션 · 미정","",true)}`;
+ if(gameMode==="ai"&&turn===2){a.innerHTML=`<div class="state full">🤖 AI가 행동을 결정하고 있습니다…</div>`;return}
+ a.innerHTML=`<div class="control-ring">
+  <div class="button-stack">${btn("↔ 이동",`sel='move';render()`,used,sel==="move")}${btn("⚔️ 기본 공격",`sel='attack';render()`,used,sel==="attack")}</div>
+  <div class="ult-orb" style="--ult:${u.c.ult}">${btn(`🔥 궁극기<strong>${u.c.ult}%</strong>${ability.ult[0]}`,"ultimate()",u.c.ult<100)}</div>
+  <div class="button-stack">${btn(`① ${ability.s1[0]}<br>${c1} SP`,`sel='s1';render()`,skills.has(1)||u.c.sp<c1,sel==="s1")}${btn(`② ${ability.s2[0]}<br>${c2} SP`,`sel='s2';render()`,skills.has(2)||u.c.sp<c2,sel==="s2")}${btn("턴 종료","endTurn()",false,false,"end-btn full")}</div>
+ </div>`;
+}
+render();log("게임 시작 · 게임 모드를 선택하세요.");
+</script>
+</body>
+</html>
